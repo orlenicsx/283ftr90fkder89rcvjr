@@ -6,38 +6,47 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "No URL provided" });
     }
 
-    // 1️⃣ Seguir la redirección de cfx.re
+    // 1️⃣ Fetch sin seguir redirección
     const response = await fetch(url, {
-      redirect: "follow"
+      redirect: "manual"
     });
 
-    const finalUrl = response.url;
+    // 2️⃣ Leer header REAL de FiveM
+    const citizenUrl =
+      response.headers.get("x-citizenfx-url") ||
+      response.headers.get("X-CitizenFX-Url");
 
-    // 2️⃣ Extraer IP:PUERTO
-    const match = finalUrl.match(/connect=([^&]+)/);
-    if (!match) {
+    if (!citizenUrl) {
       return res.status(400).json({ error: "Invalid cfx link" });
+    }
+
+    // 3️⃣ Extraer IP:PUERTO
+    const match = citizenUrl.match(/connect\/(.+)/);
+    if (!match) {
+      return res.status(400).json({ error: "Could not extract server address" });
     }
 
     const address = match[1]; // ip:puerto
 
-    // 3️⃣ Consultar API oficial de FiveM
+    // 4️⃣ API oficial FiveM
     const apiUrl = `https://servers-frontend.fivem.net/api/servers/single/${address}`;
     const serverRes = await fetch(apiUrl);
-    const serverData = await serverRes.json();
+    const serverJson = await serverRes.json();
 
-    if (!serverData.Data) {
+    if (!serverJson.Data) {
       return res.status(404).json({ error: "Server not found" });
     }
 
-    // 4️⃣ Devolver datos limpios
+    // 5️⃣ Respuesta limpia
     res.json({
-      name: serverData.Data.hostname,
-      players: serverData.Data.clients,
-      maxPlayers: serverData.Data.sv_maxclients,
-      map: serverData.Data.mapname,
-      gametype: serverData.Data.gametype,
-      address
+      address,
+      name: serverJson.Data.hostname,
+      players: serverJson.Data.clients,
+      maxPlayers: serverJson.Data.sv_maxclients,
+      map: serverJson.Data.mapname,
+      gametype: serverJson.Data.gametype,
+      resources: serverJson.Data.resources?.length || 0,
+      tags: serverJson.Data.vars?.tags || ""
     });
 
   } catch (err) {
@@ -45,4 +54,3 @@ export default async function handler(req, res) {
     res.status(500).json({ error: "Failed to analyze server" });
   }
 }
-
