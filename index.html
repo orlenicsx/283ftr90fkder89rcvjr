@@ -245,66 +245,8 @@
 <script src="js/i18n.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/main.js"></script>
-<script>
-  // Función para interpretar códigos de colores de FiveM (^1, ^2, etc.)
-  function fivemColor(str) {
-    const colors = {
-      '^0':'#ffffff', '^1':'#ff0000', '^2':'#00ff00', '^3':'#00ffff',
-      '^4':'#0000ff', '^5':'#ff00ff', '^6':'#ffff00', '^7':'#888888',
-      '^8':'#444444', '^9':'#ffa500', '^#':''
-    };
-    let html = str.replace(/\^#/g,'#'); // Manejo de hex
-    for (const code in colors) {
-      html = html.replace(new RegExp(`\\${code}`, 'g'), '');
-    }
-    return html;
-  }
 
-  // Datos de prueba (copia aquí tu JSON real)
-  const data = /* Pega aquí tu JSON del servidor */;
-
-  // Servidor
-  document.getElementById('hostname').innerHTML = fivemColor(data.hostname);
-  document.getElementById('address').textContent = data.address;
-  document.getElementById('version').textContent = data.serverVersion;
-  document.getElementById('clients').textContent = data.clients;
-  document.getElementById('maxclients').textContent = data.sv_maxclients;
-
-  // Map y banner
-  const bannerUrl = data.vars.banner_connecting || '';
-  const mapResource = data.resources.find(r => r.toLowerCase().includes('map')) || '';
-  document.getElementById('banner').src = bannerUrl;
-  document.getElementById('map').src = mapResource ? `https://cfx.re/${mapResource}` : '';
-
-  // Resources
-  document.getElementById('resourcesCount').textContent = data.resourcesCount;
-  const resList = document.getElementById('resources-list');
-  data.resources.forEach(r => {
-    const div = document.createElement('div');
-    div.className = 'resource';
-    div.textContent = r;
-    resList.appendChild(div);
-  });
-
-  // Vars
-  const varsList = document.getElementById('vars-list');
-  for (const key in data.vars) {
-    const card = document.createElement('div');
-    card.className = 'var-card';
-    card.innerHTML = `<strong>${key}:</strong> <span class="color-code">${data.vars[key]}</span>`;
-    varsList.appendChild(card);
-  }
-
-  // Players
-  const playersList = document.getElementById('players-list');
-  data.topPlayers.forEach(p => {
-    const div = document.createElement('div');
-    div.className = 'player';
-    div.innerHTML = `<strong>${fivemColor(p.name)}</strong> | Ping: ${p.ping} | ID: ${p.id}`;
-    playersList.appendChild(div);
-  });
-
-</script>
 </body>
 </html>
+
 
