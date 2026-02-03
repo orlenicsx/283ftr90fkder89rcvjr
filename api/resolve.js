@@ -23,65 +23,72 @@ export default async function handler(req, res) {
     ]);
 
     // 🎯 EXTRAE TODO (de tus archivos)
-    const result = {
-      success: true,
-      joinCode,
-      address,
-      timestamp: new Date().toISOString(),
+    const safeInfo = infoRes || {};
+const safeDynamic = dynamicRes || {};
 
-      // 👑 API OFICIAL (único aquí)
-      ownerName: apiData.ownerName,
-      ownerID: apiData.ownerID,
-      ownerAvatar: apiData.ownerAvatar,
-      ownerProfile: apiData.ownerProfile,
-      lastSeen: apiData.lastSeen,
-      upvotePower: apiData.upvotePower,
-      connectEndPoints: apiData.connectEndPoints,
-      serverVersion: apiData.server,
+const result = {
+  success: true,
+  joinCode,
+  address,
+  timestamp: new Date().toISOString(),
 
-      // 📊 INFO.JSON (22k chars → TODO parseado)
-      hostname: infoRes.hostname || apiData.hostname || dynamicRes.hostname,
-      clients: infoRes.clients || dynamicRes.clients || apiData.clients,
-      sv_maxclients: infoRes.sv_maxclients || dynamicRes.sv_maxclients || apiData.sv_maxclients,
-      resources: infoRes.resources || apiData.resources || [],
-      resourcesCount: (infoRes.resources || apiData.resources || []).length,
-      version: infoRes.version,
-      enhancedHostSupport: infoRes.enhancedHostSupport,
-      requestSteamTicket: infoRes.requestSteamTicket,
-      vars: infoRes.vars || apiData.vars || {},
+  // 👑 API OFICIAL
+  ownerName: apiData.ownerName,
+  ownerID: apiData.ownerID,
+  ownerAvatar: apiData.ownerAvatar,
+  ownerProfile: apiData.ownerProfile,
+  lastSeen: apiData.lastSeen,
+  upvotePower: apiData.upvotePower,
+  connectEndPoints: apiData.connectEndPoints,
+  serverVersion: apiData.server,
 
-      // 🕐 DYNAMIC.JSON (live)
-      liveMap: dynamicRes.mapname || dynamicRes.mapName,
-      liveGametype: dynamicRes.gametype,
-      liveHostname: dynamicRes.hostname,
+  // 📊 INFO / DYNAMIC
+  hostname: safeInfo.hostname || safeDynamic.hostname || apiData.hostname,
+  sv_maxclients: safeInfo.sv_maxclients || safeDynamic.sv_maxclients || apiData.sv_maxclients || 0,
 
-      // 👥 PLAYERS.JSON (completo)
-      playersLive: playersRes.length,
-      playersOfficial: apiData.players?.length || 0,
-      topPlayers: playersRes.slice(0, 20).map(p => ({
-        name: p.name,
-        id: p.id,
-        ping: p.ping,
-        endpoint: p.endpoint,
-        identifiers: p.identifiers || []
-      })),
-      avgPing: playersRes.reduce((a, p) => a + p.ping, 0) / playersRes.length || 0,
+  resources: safeInfo.resources || apiData.resources || [],
+  resourcesCount: (safeInfo.resources || apiData.resources || []).length,
 
-      // 📈 STATS
-      tags: [...new Set((infoRes.vars?.tags || apiData.vars?.tags || '').split(',').map(t=>t.trim()).filter(Boolean))],
-      discord: infoRes.vars?.Discord || apiData.vars?.Discord,
-      instagram: infoRes.vars?.Instagram,
-      tiktok: infoRes.vars?.TikTok,
-      txAdmin: infoRes.vars?.['txAdmin-version'],
-      locale: infoRes.vars?.locale || 'es-ES',
-      onesync: infoRes.vars?.onesync_enabled === 'true',
-      gameBuild: infoRes.vars?.sv_enforceGameBuild,
+  version: safeInfo.version,
+  enhancedHostSupport: safeInfo.enhancedHostSupport,
+  requestSteamTicket: safeInfo.requestSteamTicket,
+  vars: safeInfo.vars || apiData.vars || {},
 
-      // 🎨 ICON/BANNERS (base64)
-      iconBase64: infoRes.icon ? `data:image/png;base64,${infoRes.icon}` : null,
-      bannerConnect: infoRes.vars?.banner_connecting,
-      bannerDetail: infoRes.vars?.banner_detail
-    };
+  // 🕐 LIVE
+  liveMap: safeDynamic.mapname || safeDynamic.mapName,
+  liveGametype: safeDynamic.gametype,
+
+  // 👥 PLAYERS (ÚNICA FUENTE REAL)
+  playersLive: playersRes.length,
+  topPlayers: playersRes.slice(0, 20).map(p => ({
+    name: p.name,
+    id: p.id,
+    ping: p.ping,
+    endpoint: p.endpoint,
+    identifiers: p.identifiers || []
+  })),
+  avgPing: playersRes.reduce((a, p) => a + p.ping, 0) / (playersRes.length || 1),
+
+  // 📈 EXTRAS
+  tags: [...new Set((safeInfo.vars?.tags || apiData.vars?.tags || '')
+    .split(',')
+    .map(t => t.trim())
+    .filter(Boolean))],
+
+  discord: safeInfo.vars?.Discord || apiData.vars?.Discord,
+  instagram: safeInfo.vars?.Instagram,
+  tiktok: safeInfo.vars?.TikTok,
+  txAdmin: safeInfo.vars?.['txAdmin-version'],
+  locale: safeInfo.vars?.locale || 'es-ES',
+  onesync: safeInfo.vars?.onesync_enabled === 'true',
+  gameBuild: safeInfo.vars?.sv_enforceGameBuild,
+
+  // 🎨 ICON
+  iconBase64: safeInfo.icon ? `data:image/png;base64,${safeInfo.icon}` : null,
+  bannerConnect: safeInfo.vars?.banner_connecting,
+  bannerDetail: safeInfo.vars?.banner_detail
+};
+
     
     // 🗺️ IP OSINT (LEGAL)
     const ip = address.split(':')[0];
@@ -108,3 +115,4 @@ export default async function handler(req, res) {
   }
   
 }
+
