@@ -1,89 +1,73 @@
 export default async function handler(req, res) {
   try {
     const { url } = req.query;
-    console.log('🔍 Input URL:', url); // LOG 1
+    console.log('🔍 URL:', url);
 
-    if (!url) {
-      return res.status(400).json({ error: "No URL provided" });
-    }
+    if (!url) return res.status(400).json({ error: "No URL provided" });
 
     const response = await fetch(url, {
       redirect: "manual",
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-      }
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" }
     });
 
     const citizenUrl = response.headers.get("x-citizenfx-url") || response.headers.get("X-CitizenFX-Url");
-    console.log('🌐 CitizenFX URL:', citizenUrl); // LOG 2
+    if (!citizenUrl) return res.status(400).json({ error: "Invalid cfx link" });
 
-    if (!citizenUrl) {
-      return res.status(400).json({ error: "Invalid cfx link - no citizenfx header" });
-    }
+    const address = citizenUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    console.log('📍 Address:', address);
 
-    let address = citizenUrl
-      .replace("http://", "")
-      .replace("https://", "")
-      .replace(/\/$/, "");
-    console.log('📍 Extracted address:', address); // LOG 3
+    if (!address.includes(':')) return res.status(400).json({ error: "Bad address: " + address });
 
-    if (!address.includes(":")) {
-      return res.status(400).json({ error: "Could not extract server address: " + address });
-    }
-
-    // 🔥 INFO DIRECTA PRIMERO (más fiable)
+    // 🔥 INFO.JSON (FUNCIONA EN TU CASO)
     const infoUrl = `http://${address}/info.json`;
-    console.log('🔗 Trying info.json:', infoUrl); // LOG 4
-    const infoController = new AbortController();
-    setTimeout(() => infoController.abort(), 8000); // 8s timeout
+    const infoRes = await fetch(infoUrl, { 
+      signal: AbortSignal.timeout(10000),
+      headers: { "User-Agent": "Mozilla/5.0" }
+    }).catch(() => null);
 
-    let serverData = null;
-    try {
-      const infoRes = await fetch(infoUrl, { 
-        signal: infoController.signal,
-        headers: { "User-Agent": "Mozilla/5.0" }
-      });
-      if (infoRes.ok) {
-        serverData = await infoRes.json();
-        console.log('✅ Got info.json:', serverData.hostname); // LOG 5
-      }
-    } catch (infoErr) {
-      console.log('❌ info.json failed:', infoErr.message);
-    }
+    let data = infoRes?.ok ? await infoRes.json() : {};
 
-    // 🔄 FALLBACK API OFICIAL
-    if (!serverData || !serverData.hostname) {
-      const encodedAddress = encodeURIComponent(address);
-      const apiUrl = `https://servers-frontend.fivem.net/api/servers/single/${encodedAddress}`;
-      console.log('🔄 Trying official API:', apiUrl); // LOG 6
-      
-      const apiRes = await fetch(apiUrl);
-      const apiJson = await apiRes.json();
-      console.log('📊 Official API response:', apiJson); // LOG 7 CRUCIAL
-      
-      if (apiJson.Data && apiJson.Data.hostname) {
-        serverData = apiJson.Data;
-      } else {
-        return res.status(404).json({ error: "Server not found or offline", debug: { address, apiResponse: apiJson } });
-      }
-    }
+    // 💾 PLAYERS.JSON (lista jugadores)
+    const playersUrl = `http://${address}/players.json`;
+    const playersRes = await fetch(playersUrl, { 
+      signal: AbortSignal.timeout(5000),
+      headers: { "User-Agent": "Mozilla/5.0" }
+    }).catch(() => null);
+    const players = playersRes?.ok ? await playersRes.json() : [];
 
-    // ✅ RESPUESTA
+    // ⚡ DYNAMIC.JSON (vars extras)
+    const dynamicUrl = `http://${address}/dynamic.json`;
+    const dynamicRes = await fetch(dynamicUrl, { 
+      signal: AbortSignal.timeout(5000),
+      headers: { "User-Agent": "Mozilla/5.0" }
+    }).catch(() => null);
+    const dynamic = dynamicRes?.ok ? await dynamicRes.json() : {};
+
+    // ✅ RESPUESTA COMPLETA (incluso sin lista oficial)
     res.json({
       success: true,
       address,
-      name: serverData.hostname || "Unknown",
-      players: serverData.clients ?? 0,
-      maxPlayers: serverData.sv_maxclients ?? 0,
-      map: serverData.mapname ?? "Unknown",
-      gametype: serverData.gametype ?? "Unknown",
-      resources: Array.isArray(serverData.resources) ? serverData.resources.length : 0,
-      tags: serverData.vars?.tags ?? "",
-      online: !!serverData.hostname
+      status: {
+        online: !!data.hostname,
+        infoAvailable: !!data.hostname,
+        playersAvailable: players.length > 0
+      },
+      server: {
+        name: data.hostname || 'Unknown',
+        players: data.clients ?? players.length ?? 0,
+        maxPlayers: data.sv_maxclients ?? data.maxClients ?? 0,
+        map: data.mapname ?? dynamic.mapName ?? 'Unknown',
+        gametype: data.gametype ?? dynamic.gametype ?? 'Unknown',
+        resources: data.resources?.length ?? 0,
+        tags: data.vars?.tags ?? dynamic.tags ?? '',
+        version: data.version ?? dynamic.version ?? 'Unknown'
+      },
+      players: players.slice(0, 10), // Primeros 10
+      resources: data.resources?.slice(0, 20) ?? [] // Primeros 20
     });
 
   } catch (err) {
-    console.error('💥 Full error:', err);
-    res.status(500).json({ error: "Failed", debug: err.message });
+    console.error(err);
+    res.status(500).json({ error: err.message });
   }
 }
