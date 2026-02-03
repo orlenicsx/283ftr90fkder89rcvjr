@@ -1,24 +1,39 @@
-// En vez de sacar x-citizenfx-url y convertir a IP, usa directamente el join code que te llega
 export default async function handler(req, res) {
   try {
-    const { joinCode } = req.query; // p.ej: 6jd6o6
+    const { url } = req.query;  // ← Esto lo pillas
+    console.log('Input:', url);
 
-    if (!joinCode) {
-      return res.status(400).json({ error: "No joinCode provided" });
+    if (!url) {
+      return res.status(400).json({ error: "No URL provided" });
     }
 
+    // 🔍 Extrae joinCode de cfx.re/join/XXXXXX
+    const joinMatch = url.match(/\/join\/([a-z0-9]{4,8})(?:\?|$)/i);
+    if (!joinMatch) {
+      return res.status(400).json({ error: "No valid cfx.re/join code found" });
+    }
+    const joinCode = joinMatch[1];
+    console.log('Join code:', joinCode);
+
+    // 🔥 API oficial con joinCode
     const apiUrl = `https://servers-frontend.fivem.net/api/servers/single/${encodeURIComponent(joinCode)}`;
-    const serverRes = await fetch(apiUrl);
-    const serverJson = await serverRes.json();
+    const apiRes = await fetch(apiUrl);
+    const apiJson = await apiRes.json();
 
-    if (!serverJson.Data) {
-      return res.status(404).json({ error: "Server not found", raw: serverJson });
+    console.log('API response:', apiJson);
+
+    if (!apiJson.Data) {
+      return res.status(404).json({ 
+        error: "Server not found", 
+        debug: { joinCode, apiResponse: apiJson } 
+      });
     }
 
-    const data = serverJson.Data;
-
+    const data = apiJson.Data;
     res.json({
-      address: data.connectEndPoints?.[0] || null,
+      success: true,
+      joinCode,
+      address: data.connectEndPoints?.[0],
       name: data.hostname,
       players: data.clients,
       maxPlayers: data.sv_maxclients,
@@ -26,11 +41,12 @@ export default async function handler(req, res) {
       gametype: data.gametype,
       resources: data.resources?.length || 0,
       tags: data.vars?.tags || "",
-      playersList: data.players || []
+      playersList: data.players?.slice(0, 10) || [],
+      discord: data.vars?.Discord
     });
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed", debug: err.message });
+    res.status(500).json({ error: err.message });
   }
 }
