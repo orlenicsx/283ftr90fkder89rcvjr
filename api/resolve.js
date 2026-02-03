@@ -32,7 +32,9 @@ export default async function handler(req, res) {
     }
 
     // 🔥 API oficial FiveM
-    const apiUrl = `https://servers-frontend.fivem.net/api/servers/single/${address}`;
+    const encodedAddress = encodeURIComponent(address);
+    const apiUrl = `https://servers-frontend.fivem.net/api/servers/single/${encodedAddress}`;
+
     const serverRes = await fetch(apiUrl);
     const serverJson = await serverRes.json();
 
@@ -57,3 +59,4 @@ export default async function handler(req, res) {
     res.status(500).json({ error: "Failed to analyze server" });
   }
 }
+
