@@ -1,62 +1,66 @@
-// js/ui.js NUEVO
-function renderServer(info, geo, players, ip) {
-  const results = document.getElementById("results");
+function renderResults(data, container) {
+  const geo = data.osint || {};
+  const players = data.topPlayers || [];
 
-  results.innerHTML = `
-    <div class="card glass server-info">
-      <div style="display:flex; gap:15px; align-items:center;">
-        ${info.iconBase64 ? `<img src="${info.iconBase64}" style="width:64px;height:64px;border-radius:12px;">` : ''}
+  container.innerHTML = `
+    <div class="card glass">
+
+      <div class="server-hero">
         <div>
-          <h2>${info.hostname || info.name}</h2>
-          <p>${info.vars?.sv_projectDesc || 'Sin descripción'}</p>
+          <div class="server-title">${data.hostname}</div>
+          <p class="server-desc">${data.vars?.sv_projectDesc || 'Sin descripción del servidor'}</p>
         </div>
-      </div>
-      
-      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:20px 0;">
-        <div class="stat"><strong>👥 Jugadores</strong><br>${info.playersLive}/${info.sv_maxclients}</div>
-        <div class="stat"><strong>📦 Resources</strong><br>${info.resourcesCount}</div>
-        <div class="stat"><strong>⚡ Ping medio</strong><br>${Math.round(info.avgPing)}ms</div>
-        ${geo ? `<div class="stat"><strong>🌍 Ubicación</strong><br>${geo.city || 'N/A'}</div>` : ''}
-        ${geo ? `<div class="stat"><strong>🏢 Proveedor</strong><br>${geo.provider || geo.org || 'N/A'}</div>` : ''}
+
+        ${data.iconBase64 ? `<img src="${data.iconBase64}" class="server-icon">` : ''}
       </div>
 
-      <div style="margin:20px 0;">
-        <strong>IP:</strong> <code>${ip}</code>
-        <a class="btn-direct" href="fivem://connect/${ip}" style="margin-left:10px;">🚀 Direct Connect</a>
+      <div class="stats-grid">
+        <div class="stat-box">👥 Jugadores<span>${data.playersLive}/${data.sv_maxclients}</span></div>
+        <div class="stat-box">📦 Resources<span>${data.resourcesCount}</span></div>
+        <div class="stat-box">⚡ Ping<span>${Math.round(data.avgPing)} ms</span></div>
+        <div class="stat-box">🌍 Ubicación<span>${geo.location || 'N/A'}</span></div>
+        <div class="stat-box">🏢 ISP<span>${geo.provider || 'N/A'}</span></div>
+        <div class="stat-box">🎮 Build<span>${data.gameBuild || 'Default'}</span></div>
       </div>
 
-      ${geo ? `
-        <div id="map" style="height:250px; border-radius:12px; margin:20px 0;"></div>
+      <div class="ip-box">
+        <strong>IP:</strong> <code>${data.address}</code>
+        <a href="fivem://connect/${data.address}" class="btn-connect">🚀 Conectar</a>
+      </div>
+
+      ${geo.ip ? `
+        <div>
+          <h3 style="margin-top:28px;">🗺️ Localización del servidor</h3>
+          <div id="tempMap"></div>
+        </div>
       ` : ''}
-
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        ${info.discord ? `<a href="${info.discord}" target="_blank" class="btn-social">💬 Discord</a>` : ''}
-        ${info.instagram ? `<a href="${info.instagram}" target="_blank" class="btn-social">📸 Instagram</a>` : ''}
-        ${info.tiktok ? `<a href="${info.tiktok}" target="_blank" class="btn-social">🎵 TikTok</a>` : ''}
-        <a href="${info.ownerProfile}" target="_blank" class="btn-social">👑 Owner</a>
-      </div>
     </div>
 
     <details class="card glass">
-      <summary>📋 Players (${players?.length || 0})</summary>
-      <div style="max-height:300px;overflow:auto;">
-        ${players?.map(p => `<div style="padding:8px;border-bottom:1px solid #333;">${p.name} <span style="color:#888;">(${p.ping}ms)</span></div>`).join('') || 'No disponibles'}
+      <summary>👥 Jugadores (${players.length})</summary>
+      <div class="players-list">
+        ${players.map(p => `
+          <div>${p.name} <span style="float:right;opacity:.6">${p.ping}ms</span></div>
+        `).join('')}
       </div>
     </details>
 
     <details class="card glass">
-      <summary>📦 Resources (${info.resourcesCount || 0})</summary>
-      <pre style="max-height:200px;overflow:auto;font-size:12px;">${(info.fullResources || []).slice(0,100).join(', ')}${(info.fullResources || []).length > 100 ? '...' : ''}</pre>
+      <summary>📦 Resources (${data.resourcesCount})</summary>
+      <pre class="resources-list">${(data.resources || []).slice(0,150).join(', ')}${data.resources.length > 150 ? '...' : ''}</pre>
     </details>
   `;
 
-  // 🗺️ Mapa si hay geo
-  if (geo && typeof L !== 'undefined') {
-    const map = L.map("map").setView([geo.latitude || 40.4168, geo.longitude || -3.7038], 10);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
-    L.marker([geo.latitude || 40.4168, geo.longitude || -3.7038]).addTo(map)
-      .bindPopup(`${geo.city || 'Madrid'}<br>${geo.provider || 'OVH'}`);
+  // MAPA
+  if (geo.ip && typeof L !== 'undefined') {
+    setTimeout(() => {
+      const map = L.map("tempMap").setView([40.4168, -3.7038], 10);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+      L.marker([40.4168, -3.7038]).addTo(map)
+        .bindPopup(geo.location || 'Server location');
+    }, 100);
   }
 }
+
+}
+
