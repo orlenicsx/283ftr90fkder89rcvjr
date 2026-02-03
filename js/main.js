@@ -1,26 +1,32 @@
-document.getElementById("searchBtn").addEventListener("click", async () => {
-  const input = document.getElementById("cfxInput").value.trim();
-  const results = document.getElementById("results");
+const form = document.getElementById("searchForm");
+const input = document.getElementById("cfxInput");
+const status = document.getElementById("status");
 
-  if (!input.includes("cfx.re/join")) {
-    showError(results, "❌ Enlace cfx.re inválido");
-    return;
-  }
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-  showLoading(results);
+  const url = input.value.trim();
+  if (!url) return;
+
+  status.textContent = "Analizando servidor...";
+  status.className = "loading";
 
   try {
-    const res = await fetch(
-      `/api/resolve?url=${encodeURIComponent(input)}`
-    );
-
-    if (!res.ok) throw new Error();
-
+    const res = await fetch(`/api/resolve?url=${encodeURIComponent(url)}`);
     const data = await res.json();
 
-    renderServer(data.info, data.geo, data.players, data.ip);
+    if (!data.success) {
+      status.textContent = data.error || "Error desconocido";
+      status.className = "error";
+      return;
+    }
 
-  } catch (e) {
-    showError(results, "❌ No se pudo analizar el servidor");
+    status.textContent = "Servidor analizado correctamente";
+    status.className = "success";
+
+    renderServer(data); // 🔥 ui.js
+  } catch (err) {
+    status.textContent = "Error de conexión";
+    status.className = "error";
   }
 });
