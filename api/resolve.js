@@ -1,45 +1,48 @@
 export default async function handler(req, res) {
-  const { url } = req.query;
-
-  if (!url || !url.includes("cfx.re/join")) {
-    return res.status(400).json({ error: "Invalid cfx link" });
-  }
-
   try {
-    // 1️⃣ Resolver cfx.re
-    const cfxRes = await fetch(url, {
-      redirect: "manual",
-      headers: { "User-Agent": "FiveM-IP-Finder" }
-    });
+    const { url } = req.query;
 
-    const citizenfx = cfxRes.headers.get("x-citizenfx-url");
-    if (!citizenfx) {
-      return res.status(404).json({ error: "Server IP not found" });
+    if (!url) {
+      return res.status(400).json({ error: "No URL provided" });
     }
 
-    const ip = citizenfx.replace(/^https?:\/\//, "");
+    // 1️⃣ Seguir la redirección de cfx.re
+    const response = await fetch(url, {
+      redirect: "follow"
+    });
 
-    // 2️⃣ Fetch servidor FiveM
-    const infoPromise = fetch(`http://${ip}/info.json`).then(r => r.json());
-    const playersPromise = fetch(`http://${ip}/players.json`)
-      .then(r => r.json())
-      .catch(() => []);
+    const finalUrl = response.url;
 
-    // 3️⃣ Geo IP
-    const geoPromise = fetch(
-      `https://ipapi.co/${ip.split(":")[0]}/json/`
-    ).then(r => r.json());
+    // 2️⃣ Extraer IP:PUERTO
+    const match = finalUrl.match(/connect=([^&]+)/);
+    if (!match) {
+      return res.status(400).json({ error: "Invalid cfx link" });
+    }
 
-    const [info, players, geo] = await Promise.all([
-      infoPromise,
-      playersPromise,
-      geoPromise
-    ]);
+    const address = match[1]; // ip:puerto
 
-    res.setHeader("Cache-Control", "s-maxage=60");
-    res.json({ ip, info, players, geo });
+    // 3️⃣ Consultar API oficial de FiveM
+    const apiUrl = `https://servers-frontend.fivem.net/api/servers/single/${address}`;
+    const serverRes = await fetch(apiUrl);
+    const serverData = await serverRes.json();
+
+    if (!serverData.Data) {
+      return res.status(404).json({ error: "Server not found" });
+    }
+
+    // 4️⃣ Devolver datos limpios
+    res.json({
+      name: serverData.Data.hostname,
+      players: serverData.Data.clients,
+      maxPlayers: serverData.Data.sv_maxclients,
+      map: serverData.Data.mapname,
+      gametype: serverData.Data.gametype,
+      address
+    });
 
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Failed to analyze server" });
   }
 }
+
