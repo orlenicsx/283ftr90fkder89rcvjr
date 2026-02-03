@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>FiveM IP Finder · Professional Server Lookup</title>
+
+  <!-- SEO -->
+  <meta name="description" content="FiveM IP Finder es la herramienta profesional para descubrir la IP real, localización y datos de cualquier servidor FiveM usando enlaces cfx.re/join">
+  <meta name="keywords" content="FiveM, IP Finder, cfx.re, GTA V RP, FiveM Servers">
+  <meta name="author" content="FiveM IP Finder">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- OpenGraph -->
+  <meta property="og:title" content="FiveM IP Finder">
+  <meta property="og:description" content="Descubre la IP real y toda la información de cualquier servidor FiveM">
+  <meta property="og:type" content="website">
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<!-- ================= HEADER ================= -->
+<header class="header glass">
+  <div class="logo">
+    <span class="logo-accent">FiveM</span> IP Finder
+  </div>
+
+  <nav class="nav">
+    <a href="#features" data-i18n="navFeatures">Funciones</a>
+    <a href="#about" data-i18n="navAbout">Sobre nosotros</a>
+    <a href="#faq" data-i18n="navFaq">FAQ</a>
+    <a href="#contact" data-i18n="navContact">Contacto</a>
+  </nav>
+
+  <div class="header-right">
+    <select id="languageSelect">
+      <option value="es">🇪🇸 ES</option>
+      <option value="en">🇺🇸 EN</option>
+      <option value="fr">🇫🇷 FR</option>
+      <option value="de">🇩🇪 DE</option>
+    </select>
+
+    <a href="https://github.com/" target="_blank" class="github-link">
+      GitHub
+    </a>
+  </div>
+</header>
+
+<!-- ================= HERO ================= -->
+<section class="hero gradient-bg">
+  <div class="hero-content">
+    <h1 data-i18n="title">
+      FiveM IP Finder
+    </h1>
+
+    <p class="hero-subtitle" data-i18n="tagline">
+      La herramienta definitiva para analizar servidores FiveM
+    </p>
+
+    <div class="search-box glass">
+      <input
+        id="cfxInput"
+        type="text"
+        data-i18n-placeholder="placeholder"
+      />
+      <button id="searchBtn" data-i18n="search">
+        Buscar
+      </button>
+    </div>
+
+    <div id="rateLimitMsg" class="rate-limit hidden"></div>
+
+    <div class="hero-stats">
+      <div class="stat">
+        <h3>+10K</h3>
+        <p>Servidores analizados</p>
+      </div>
+      <div class="stat">
+        <h3>99.9%</h3>
+        <p>Uptime</p>
+      </div>
+      <div class="stat">
+        <h3>100%</h3>
+        <p>Gratis</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= RESULTS ================= -->
+<section id="results" class="results"></section>
+
+<!-- ================= FEATURES ================= -->
+<section id="features" class="section">
+  <h2 class="section-title">Funciones principales</h2>
+
+  <div class="features-grid">
+    <div class="feature-card glass">
+      <h3>🔍 Búsqueda por cfx.re</h3>
+      <p>
+        Pega cualquier enlace <strong>cfx.re/join</strong> y obtén la IP real del servidor automáticamente.
+      </p>
+    </div>
+
+    <div class="feature-card glass">
+      <h3>📊 Información completa</h3>
+      <p>
+        Nombre del servidor, descripción, jugadores online, slots máximos, recursos y tags.
+      </p>
+    </div>
+
+    <div class="feature-card glass">
+      <h3>🌍 Geolocalización</h3>
+      <p>
+        Localiza el servidor en el mapa con país, ciudad y proveedor de red.
+      </p>
+    </div>
+
+    <div class="feature-card glass">
+      <h3>⚡ Direct Connect</h3>
+      <p>
+        Conéctate directamente al servidor desde FiveM con un solo clic.
+      </p>
+    </div>
+
+    <div class="feature-card glass">
+      <h3>🛡️ Seguro y privado</h3>
+      <p>
+        No almacenamos IPs ni enlaces. Todo el procesamiento se hace en tiempo real.
+      </p>
+    </div>
+
+    <div class="feature-card glass">
+      <h3>📱 Responsive</h3>
+      <p>
+        Optimizado para móvil, tablet y escritorio con diseño moderno.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ABOUT ================= -->
+<section id="about" class="section alt-bg">
+  <h2 class="section-title">Sobre FiveM IP Finder</h2>
+
+  <div class="about-content">
+    <p>
+      FiveM IP Finder nace como una herramienta pensada para administradores,
+      desarrolladores y jugadores avanzados de <strong>GTA V Roleplay</strong>.
+    </p>
+
+    <p>
+      Sabemos lo frustrante que puede ser no tener información clara sobre un servidor.
+      Por eso creamos una plataforma rápida, moderna y fiable que centraliza todos los datos importantes.
+    </p>
+
+    <p>
+      Nuestro objetivo es ofrecer una experiencia <strong>simple, transparente y profesional</strong>,
+      sin anuncios invasivos ni limitaciones ocultas.
+    </p>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section id="faq" class="section">
+  <h2 class="section-title">Preguntas frecuentes</h2>
+
+  <div class="faq">
+    <div class="faq-item glass">
+      <h3>¿Es legal usar FiveM IP Finder?</h3>
+      <p>
+        Sí. La información mostrada es pública y accesible desde FiveM.
+        No vulneramos sistemas ni protegemos contenido privado.
+      </p>
+    </div>
+
+    <div class="faq-item glass">
+      <h3>¿Por qué algunos servidores no muestran jugadores?</h3>
+      <p>
+        Algunos servidores deshabilitan el endpoint <code>players.json</code>
+        por motivos de privacidad.
+      </p>
+    </div>
+
+    <div class="faq-item glass">
+      <h3>¿Necesito registrarme?</h3>
+      <p>
+        No. FiveM IP Finder es completamente gratuito y no requiere cuenta.
+      </p>
+    </div>
+
+    <div class="faq-item glass">
+      <h3>¿Funciona en móvil?</h3>
+      <p>
+        Sí, la web es totalmente responsive y compatible con cualquier dispositivo.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CONTACT ================= -->
+<section id="contact" class="section alt-bg">
+  <h2 class="section-title">Contacto</h2>
+
+  <p class="contact-text">
+    ¿Tienes sugerencias, errores o ideas?
+    Escríbenos o contribuye en GitHub.
+  </p>
+
+  <div class="contact-actions">
+    <a href="https://github.com/" target="_blank" class="btn-outline">
+      GitHub
+    </a>
+    <a href="mailto:contact@fivemipfinder.com" class="btn-outline">
+      Email
+    </a>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer class="footer">
+  <div class="footer-content">
+    <p>
+      © 2026 FiveM IP Finder · Proyecto independiente · No afiliado a Rockstar Games ni Cfx.re
+    </p>
+
+    <div class="footer-links">
+      <a href="#">Privacidad</a>
+      <a href="#">Términos</a>
+      <a href="#">Estado</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ================= SCRIPTS ================= -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>
