@@ -1,43 +1,39 @@
-function renderServer(data) {
-  const container = document.getElementById("result");
+function showLoading(container) {
+  container.innerHTML = `<div class="card glass">⏳ Cargando...</div>`;
+}
 
-  container.innerHTML = `
-    <div class="card">
-      <div class="header">
-        ${data.iconBase64 ? `<img src="${data.iconBase64}" class="icon">` : ""}
-        <div>
-          <h2>${data.hostname}</h2>
-          <p>${data.clients}/${data.sv_maxclients} jugadores</p>
-        </div>
-      </div>
+function showError(container, msg) {
+  container.innerHTML = `<div class="card glass">${msg}</div>`;
+}
 
-      <div class="grid">
-        <div><b>IP:</b> ${data.address}</div>
-        <div><b>Owner:</b> ${data.ownerName}</div>
-        <div><b>OneSync:</b> ${data.onesync ? "Sí" : "No"}</div>
-        <div><b>Build:</b> ${data.gameBuild}</div>
-        <div><b>Ping medio:</b> ${Math.round(data.avgPing)} ms</div>
-        <div><b>Recursos:</b> ${data.resourcesCount}</div>
-      </div>
+function renderServer(info, geo, players, ip) {
+  const results = document.getElementById("results");
 
-      ${data.bannerConnect ? `<img class="banner" src="${data.bannerConnect}">` : ""}
+  results.innerHTML = `
+    <div class="card glass">
+      <h2>${info.hostname}</h2>
+      <p>${info.vars?.sv_projectDesc || ""}</p>
 
-      <h3>Top jugadores</h3>
-      <ul class="players">
-        ${data.topPlayers.map(p => `
-          <li>
-            <span>${p.name}</span>
-            <span>${p.ping} ms</span>
-          </li>
-        `).join("")}
-      </ul>
+      <p>👥 ${info.clients}/${info.sv_maxclients}</p>
+      <p>🌍 ${geo.city}, ${geo.country_name}</p>
+      <p>📡 ${geo.org}</p>
 
-      <h3>OSINT</h3>
-      <div class="grid">
-        <div><b>ISP:</b> ${data.osint.isp}</div>
-        <div><b>Hosting:</b> ${data.osint.hosting ? "Sí" : "No"}</div>
-        <div><b>Ubicación:</b> ${data.osint.location}</div>
-      </div>
+      <p><strong>IP:</strong> ${ip}</p>
+
+      <div id="map" class="map"></div>
+
+      <a class="btn-outline" href="fivem://connect/${ip}">
+        Direct Connect
+      </a>
     </div>
   `;
+
+  const map = L.map("map").setView(
+    [geo.latitude, geo.longitude],
+    10
+  );
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+  L.marker([geo.latitude, geo.longitude]).addTo(map);
 }
+
