@@ -82,9 +82,30 @@ export default async function handler(req, res) {
       bannerConnect: infoRes.vars?.banner_connecting,
       bannerDetail: infoRes.vars?.banner_detail
     };
+    
+    // 🗺️ IP OSINT (LEGAL)
+    const ip = address.split(':')[0];
+    const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,org,isp,hosting,country,regionName,city`);
+    const geo = await geoRes.json();
+    
+    // 🔍 DNS reverso
+    const reverse = await fetch(`https://dns.google/resolve?name=${ip}`);
+    const dnsData = await reverse.json();
 
-    res.json(result);
+    res.json({
+    ...result,
+    osint: {
+      ip: ip,
+      provider: geo.org || "Unknown",
+      isp: geo.isp,
+      hosting: geo.hosting,
+      location: `${geo.city}, ${geo.regionName}, ${geo.country}`,
+      reverseDNS: dnsData.Answer || []
+    }
+  });
   } catch(e) {
     res.status(500).json({error: e.message});
   }
+  
 }
+
