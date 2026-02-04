@@ -59,7 +59,7 @@ body {
   letter-spacing: 0.5px;
 }
 .logo img {
-  width: 100px
+  width: 130px
 }
 .logo-accent {
   background: linear-gradient(
@@ -392,5 +392,6 @@ body {
     padding: 16px;
   }
 }
+
 
 
